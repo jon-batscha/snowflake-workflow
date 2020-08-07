@@ -25,7 +25,7 @@ As everyone's data is different: you will need to include a SQL query command fi
 
 1. Make sure `config.py` is properly configured
 2. Make sure your custom sql file (e.g: `commands.sql`) is in the same directory as the other package components
-3. Run `python snowflake_to_csv` (optionally, can include `--aws` to upload directly to configured s3 bucket)
+3. Run `python snowflake_to_csv.py` (optionally, can include `--aws` to upload directly to configured s3 bucket)
 
 ## Dependencies
 
