@@ -12,6 +12,7 @@ registry.register('snowflake', 'snowflake.sqlalchemy', 'dialect')
 # get optional AWS arg
 parser = argparse.ArgumentParser(description='automated workflow for extracting data from snowflake to s3 using standalone sql command file along with a config')
 parser.add_argument('--aws', action='store_const', const = True, default= False, help='flag to upload data to s3')
+parser.add_argument('--no_out', action='store_const', const = True, default= False, help='flag to cancel output')
 
 args = parser.parse_args()
 args_dict = vars(args)
@@ -26,7 +27,7 @@ engine = create_engine(
         database = config.database,
         schema = config.schema,
         warehouse = config.warehouse,
-        role =config.role 
+        role = config.role 
     )
 )
 
@@ -42,44 +43,48 @@ with open(config.sql_query_file,'r') as f:
 
 result = connection.execute(query)
 
-output = [result._metadata.keys]
+if not args_dict['no_out']:
 
-for row in result:
+    headers = [header.upper() for header in result._metadata.keys]
 
-    output.append(list(row))
+    output = [headers]
 
-# write query results to output file
-with open(config.output_filepath,'w') as f:
-    writer = csv.writer(f)
-    writer.writerows(output)
+    for row in result:
 
-# optionally, upload to s3 bucket/folder
-if args_dict['aws']:
+        output.append(list(row))
 
-    bucket_name = config.s3_bucket_location.split('/')[0]
+    # write query results to output file
+    with open(config.output_filepath,'w') as f:
+        writer = csv.writer(f)
+        writer.writerows(output)
 
-    # set destination
-    subfolders = [dir for dir in config.s3_bucket_location.split('/') if dir != '']
+    # optionally, upload to s3 bucket/folder
+    if args_dict['aws']:
 
-    if len(subfolders) == 1:
+        bucket_name = config.s3_bucket_location.split('/')[0]
 
-        dest = config.output_filepath
+        # set destination
+        subfolders = [dir for dir in config.s3_bucket_location.split('/') if dir != '']
 
-    else:
+        if len(subfolders) == 1:
 
-        dest = ''
+            dest = config.output_filepath
 
-        for dir in subfolders[1:]:
+        else:
 
-            dest += dir+'/'
+            dest = ''
 
-        dest += config.output_filepath
+            for dir in subfolders[1:]:
 
-    # send to destination
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(bucket_name)
+                dest += dir+'/'
 
-    bucket.upload_file(config.output_filepath, dest)
+            dest += config.output_filepath
+
+        # send to destination
+        s3 = boto3.resource('s3')
+        bucket = s3.Bucket(bucket_name)
+
+        bucket.upload_file(config.output_filepath, dest)
 
 connection.close()
 engine.dispose()
