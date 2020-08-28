@@ -5,7 +5,7 @@ This repo contains a few pre-built components to easily extract data from snowfl
 - https://github.com/jon-batscha/config-csv-ingestion
 - https://github.com/jon-batscha/s3_triggered_ingestion
 
-to quickly set up a system to move your data from snowflake into Klaviyo, either for a one-off migration or as a recurring cron-job.
+to set up a system to move your data from snowflake into Klaviyo, either for a one-off migration or as a recurring cron-job.
 
 ## Component Files
 
